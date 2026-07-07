@@ -14,15 +14,24 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('portfolio_theme');
-    if (saved === 'light' || saved === 'dark') return saved;
-    // Fallback to system preference
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    try {
+      const saved = localStorage.getItem('portfolio_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch (_) { /* ignore localStorage errors in restricted environments */ }
+    // Fallback to system preference (safely)
+    try {
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+    } catch (_) { /* ignore matchMedia errors */ }
+    return 'dark';
   });
 
   const [accent, setAccentState] = useState<Accent>(() => {
-    const saved = localStorage.getItem('portfolio_accent');
-    if (saved === 'indigo' || saved === 'emerald' || saved === 'violet' || saved === 'crimson') return saved;
+    try {
+      const saved = localStorage.getItem('portfolio_accent');
+      if (saved === 'indigo' || saved === 'emerald' || saved === 'violet' || saved === 'crimson') return saved;
+    } catch (_) { /* ignore localStorage errors */ }
     return 'violet';
   });
 
