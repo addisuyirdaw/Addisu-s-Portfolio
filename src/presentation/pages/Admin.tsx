@@ -61,6 +61,13 @@ export const Admin: React.FC = () => {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
 
+  // Account Security States
+  const [securityEmail, setSecurityEmail] = useState('');
+  const [securityPassword, setSecurityPassword] = useState('');
+  const [securityConfirmPassword, setSecurityConfirmPassword] = useState('');
+  const [securitySuccess, setSecuritySuccess] = useState('');
+  const [securityError, setSecurityError] = useState('');
+
   // Navigation tab state
   const [activeTab, setActiveTab] = useState<'dashboard' | 'projects' | 'timeline' | 'skills' | 'certs' | 'blogs' | 'testimonials' | 'media' | 'inbox' | 'settings'>('dashboard');
 
@@ -257,6 +264,9 @@ export const Admin: React.FC = () => {
     authGateway.getSession().then((session: any) => {
       if (session) {
         setIsAuthenticated(true);
+        if (session.user?.email) {
+          setSecurityEmail(session.user.email);
+        }
         refreshData();
       }
     });
@@ -305,6 +315,36 @@ export const Admin: React.FC = () => {
   const handleLogout = async () => {
     await authGateway.logout();
     setIsAuthenticated(false);
+  };
+
+  const handleUpdateSecurity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSecurityError('');
+    setSecuritySuccess('');
+
+    if (securityPassword && securityPassword !== securityConfirmPassword) {
+      setSecurityError('Passwords do not match.');
+      return;
+    }
+
+    try {
+      await authGateway.updateUser(
+        securityEmail || undefined,
+        securityPassword || undefined
+      );
+
+      setSecuritySuccess('Credentials updated successfully. You will be logged out in 2 seconds...');
+      
+      setTimeout(async () => {
+        await handleLogout();
+        // Clear secure states
+        setSecurityPassword('');
+        setSecurityConfirmPassword('');
+        setSecuritySuccess('');
+      }, 2000);
+    } catch (err: any) {
+      setSecurityError(err.message || 'Failed to update credentials.');
+    }
   };
 
   // Automated SEO Slug Generator
@@ -576,7 +616,7 @@ export const Admin: React.FC = () => {
               <input 
                 type="email" 
                 className="form-input" 
-                placeholder="admin@addisu.com"
+                placeholder="your-email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -598,10 +638,6 @@ export const Admin: React.FC = () => {
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
               Authenticate Credentials
             </button>
-            
-            <p style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', textAlign: 'center', marginTop: '15px' }}>
-              Note: Email is <strong>admin@addisu.com</strong> and Password is <strong>admin123</strong> for mock testing.
-            </p>
           </form>
         </div>
       </div>
@@ -1492,25 +1528,85 @@ export const Admin: React.FC = () => {
               </button>
             </form>
 
-            {/* Backups panel */}
-            <div className="glass-panel" style={{ padding: '30px', borderRadius: '24px', alignSelf: 'flex-start' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '15px' }}>Platform Storage Sync & Backups</h3>
-              <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.5', marginBottom: '20px' }}>
-                Export all content from this Career Management Platform to a JSON file, or restore data using a previously exported backup file.
-              </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', alignSelf: 'flex-start' }}>
+              {/* Backups panel */}
+              <div className="glass-panel" style={{ padding: '30px', borderRadius: '24px' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '15px' }}>Platform Storage Sync & Backups</h3>
+                <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.5', marginBottom: '20px' }}>
+                  Export all content from this Career Management Platform to a JSON file, or restore data using a previously exported backup file.
+                </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <button className="btn btn-primary" onClick={exportDatabase}>
-                  <Database size={16} />
-                  <span>Export JSON Backup</span>
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <button className="btn btn-primary" onClick={exportDatabase}>
+                    <Database size={16} />
+                    <span>Export JSON Backup</span>
+                  </button>
 
-                <label className="btn btn-secondary" style={{ textAlign: 'center', cursor: 'pointer', padding: '0.6rem' }}>
-                  <Upload size={16} style={{ marginRight: '6px' }} />
-                  <span>Import JSON Backup</span>
-                  <input type="file" accept=".json" onChange={importDatabase} style={{ display: 'none' }} />
-                </label>
+                  <label className="btn btn-secondary" style={{ textAlign: 'center', cursor: 'pointer', padding: '0.6rem' }}>
+                    <Upload size={16} style={{ marginRight: '6px' }} />
+                    <span>Import JSON Backup</span>
+                    <input type="file" accept=".json" onChange={importDatabase} style={{ display: 'none' }} />
+                  </label>
+                </div>
               </div>
+
+              {/* Account Security panel */}
+              <form className="glass-panel" onSubmit={handleUpdateSecurity} style={{ padding: '30px', borderRadius: '24px' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '15px' }}>Account Security Settings</h3>
+                <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.5', marginBottom: '20px' }}>
+                  Update your CMS administrator authentication credentials. Changes will require you to log in again.
+                </p>
+
+                {securityError && (
+                  <div style={{ padding: '10px', background: 'rgba(225,29,72,0.1)', border: '1px solid #e11d48', borderRadius: '8px', color: '#e11d48', marginBottom: '15px', fontSize: '0.85rem' }}>
+                    {securityError}
+                  </div>
+                )}
+                {securitySuccess && (
+                  <div style={{ padding: '10px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', borderRadius: '8px', color: '#10b981', marginBottom: '15px', fontSize: '0.85rem' }}>
+                    {securitySuccess}
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">New Email Address / Username</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="new-email@example.com"
+                    value={securityEmail}
+                    onChange={e => setSecurityEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">New Password</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={securityPassword}
+                    onChange={e => setSecurityPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Confirm New Password</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={securityConfirmPassword}
+                    onChange={e => setSecurityConfirmPassword(e.target.value)}
+                  />
+                </div>
+
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '15px' }}>
+                  <Save size={16} />
+                  <span>Update Account Credentials</span>
+                </button>
+              </form>
             </div>
           </div>
         )}

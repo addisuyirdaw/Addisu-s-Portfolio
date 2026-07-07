@@ -67,6 +67,19 @@ export class SupabaseAuthGateway implements AuthGateway {
       }
     };
   }
+
+  async updateUser(email?: string, password?: string): Promise<void> {
+    if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+    const session = await this.getSession();
+    if (!session) {
+      throw new Error('No active authenticated session found.');
+    }
+    const updateData: { email?: string; password?: string } = {};
+    if (email) updateData.email = email;
+    if (password) updateData.password = password;
+    const { error } = await supabase!.auth.updateUser(updateData);
+    if (error) throw error;
+  }
 }
 
 export class SupabaseProjectRepository implements ProjectRepository {

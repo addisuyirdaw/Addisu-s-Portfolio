@@ -56,16 +56,46 @@ const setLocal = <T>(key: string, value: T): void => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
+function generateSalt(): string {
+  const array = new Uint8Array(16);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPassword(password: string, salt: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + salt);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export class MockAuthGateway implements AuthGateway {
   async login(email: string, password?: string): Promise<{ user: any; session: any }> {
-    if (email === 'admin@addisu.com' && password === 'admin123') {
+    let adminEmail = localStorage.getItem('mock_admin_email');
+    if (!adminEmail) {
+      adminEmail = 'admin@addisu.com';
+      localStorage.setItem('mock_admin_email', adminEmail);
+    }
+
+    let storedHash = localStorage.getItem('mock_admin_password_hash');
+    let storedSalt = localStorage.getItem('mock_admin_password_salt');
+    if (!storedHash || !storedSalt) {
+      storedSalt = generateSalt();
+      storedHash = await hashPassword('admin123', storedSalt);
+      localStorage.setItem('mock_admin_password_salt', storedSalt);
+      localStorage.setItem('mock_admin_password_hash', storedHash);
+    }
+
+    const inputHash = password ? await hashPassword(password, storedSalt) : '';
+    if (email === adminEmail && inputHash === storedHash) {
       const session = { access_token: 'mock-jwt-token', expires_at: Date.now() + 3600000 };
-      const user = { id: 'admin-id', email: 'admin@addisu.com', role: 'admin' };
+      const user = { id: 'admin-id', email: adminEmail, role: 'admin' };
       setLocal('portfolio_session', session);
       setLocal('portfolio_user', user);
       return { user, session };
     }
-    throw new Error('Invalid email or password. Use email: admin@addisu.com and password: admin123');
+    throw new Error('Invalid email or password.');
   }
 
   async loginWithOAuth(provider: 'github' | 'google'): Promise<void> {
@@ -82,7 +112,30 @@ export class MockAuthGateway implements AuthGateway {
   }
 
   async getSession(): Promise<any> {
-    return getLocal('portfolio_session', null);
+    const session = getLocal<any>('portfolio_session', null);
+    if (session) {
+      const email = localStorage.getItem('mock_admin_email') || 'admin@addisu.com';
+      session.user = getLocal<any>('portfolio_user', null) || { id: 'admin-id', email, role: 'admin' };
+    }
+    return session;
+  }
+
+  async updateUser(email?: string, password?: string): Promise<void> {
+    if (email) {
+      localStorage.setItem('mock_admin_email', email);
+      const session = getLocal<any>('portfolio_session', null);
+      if (session) {
+        const user = getLocal<any>('portfolio_user', null) || { id: 'admin-id', email: '', role: 'admin' };
+        user.email = email;
+        setLocal('portfolio_user', user);
+      }
+    }
+    if (password) {
+      const salt = generateSalt();
+      const hash = await hashPassword(password, salt);
+      localStorage.setItem('mock_admin_password_salt', salt);
+      localStorage.setItem('mock_admin_password_hash', hash);
+    }
   }
 
   onAuthStateChange(callback: (event: string, session: any) => void): { unsubscribe: () => void } {

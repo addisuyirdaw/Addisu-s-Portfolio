@@ -18,6 +18,7 @@ export interface AuthGateway {
   logout(): Promise<void>;
   getSession(): Promise<any>;
   onAuthStateChange(callback: (event: string, session: any) => void): { unsubscribe: () => void };
+  updateUser(email?: string, password?: string): Promise<void>;
 }
 
 export interface ProjectRepository {
