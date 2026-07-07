@@ -135,7 +135,7 @@ export const Hero: React.FC<HeroProps> = ({
             <span className="hero-subtitle">{t('heroGreeting')}</span>
             <h1 className="hero-title">Addisu Yirdaw Deresse</h1>
             <p className="hero-headline">
-              Computer Science & Business Administration Double-Major | AI & Mobile App Developer | Student Leader | Future Technology Entrepreneur
+              Computer Science & Business Administration Double-Major | AI & Mobile App Developer | ALX Africa Community Ambassador | Student Leader | Future Technology Entrepreneur
             </p>
             <p style={{ color: 'hsl(var(--text-secondary))', marginBottom: '2rem', maxWidth: '600px', fontSize: '1.05rem' }}>
               Building premium technology solutions that improve people's lives through innovation, accessibility, healthcare, and education. Dedicated to engineering zero-trust architectures and intelligent AI systems.

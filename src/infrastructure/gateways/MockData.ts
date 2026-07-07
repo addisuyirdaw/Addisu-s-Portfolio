@@ -12,7 +12,7 @@ import type {
 export const defaultProfile: Profile = {
   id: 'admin-id',
   full_name: 'Addisu Yirdaw',
-  headline: 'Software Engineer & AI Builder',
+  headline: 'Software Engineer & AI Builder | ALX Africa Community Ambassador',
   email: 'addisulal@gmail.com',
   phone: '+251 900 000 000',
   location: 'Ethiopia',
@@ -283,6 +283,27 @@ export const defaultTimelineEvents: TimelineEvent[] = [
   },
   {
     id: 't3',
+    title_en: 'ALX Africa Community Ambassador',
+    title_am: 'የኤ.ኤል.ኤክስ አፍሪካ የማህበረሰብ አምባሳደር (ALX Africa Community Ambassador)',
+    organization_en: 'ALX Africa',
+    category: 'Leadership',
+    start_date: '2025-01-01',
+    end_date: null,
+    description_en: [
+      'Representing ALX Africa on campus and within local tech student ecosystems.',
+      'Organizing student community meetups, technical workshops, and coding study groups.',
+      'Fostering collaboration, networking, and professional growth opportunities for tech learners.'
+    ],
+    description_am: [
+      'የኤ.ኤል.ኤክስ አፍሪካን ማህበረሰብ በካምፓስ እና በአካባቢው የቴክኖሎጂ ተማሪዎች ስነ-ምህዳር ውስጥ መወከል።',
+      'የተማሪ ማህበረሰብ ስብሰባዎችን፣ የቴክኒክ አውደ ጥናቶችን እና የኮዲንግ የጥናት ቡድኖችን ማደራጀት።',
+      'ለቴክኖሎጂ ተማሪዎች የትብብር፣ የግንኙነት እና የሙያ እድገት እድሎችን ማበረታታት።'
+    ],
+    featured: true,
+    sort_order: 3
+  },
+  {
+    id: 't4',
     title_en: 'Student Leader & Club Coordinator',
     title_am: 'የተማሪዎች መሪ እና የክለቦች አስተባባሪ',
     organization_en: 'Debre Berhan University Student Union',
@@ -300,10 +321,10 @@ export const defaultTimelineEvents: TimelineEvent[] = [
       'ከተደራሽነት ግብዓቶች እና ከተማሪዎች አገልግሎት ሶፍትዌሮች ውህደት ጋር በተያያዘ የተማሪዎችን ፍላጎት መደገፍ።'
     ],
     featured: true,
-    sort_order: 3
+    sort_order: 4
   },
   {
-    id: 't4',
+    id: 't5',
     title_en: 'Virtual Assistant & Tech Consultant',
     title_am: 'ምናባዊ ረዳት እና የቴክኖሎጂ አማካሪ',
     organization_en: 'Global Tech Remote Clients',
@@ -316,7 +337,7 @@ export const defaultTimelineEvents: TimelineEvent[] = [
       'Assisted in documentation, API testing, and web updates.'
     ],
     featured: false,
-    sort_order: 4
+    sort_order: 5
   }
 ];
 
