@@ -11,8 +11,8 @@ import type {
 
 export const defaultProfile: Profile = {
   id: 'admin-id',
-  full_name: 'Addisu Yirdaw Deresse',
-  headline: 'Computer Science & Business Administration Student | Software Engineer | AI Developer',
+  full_name: 'Addisu Yirdaw',
+  headline: 'Software Engineer & AI Builder',
   email: 'addisulal@gmail.com',
   phone: '+251 900 000 000',
   location: 'Ethiopia',
