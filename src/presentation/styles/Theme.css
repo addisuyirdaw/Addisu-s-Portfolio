@@ -1,0 +1,97 @@
+/* Core HSL Tokens and Theme Stylesheets */
+
+:root {
+  /* Fonts */
+  --font-header: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2.5rem;
+  --spacing-xxl: 4rem;
+
+  /* Borders & Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 30px;
+  --radius-round: 50%;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light / Dark Mode Color Schemes */
+:root[data-theme="dark"] {
+  --bg-primary: 240 10% 3.9%;
+  --bg-secondary: 240 10% 6%;
+  --bg-tertiary: 240 10% 10%;
+  
+  --text-primary: 0 0% 98%;
+  --text-secondary: 240 5% 64.9%;
+  --text-muted: 240 5% 45%;
+
+  --border-glass: rgba(255, 255, 255, 0.05);
+  --border-glass-hover: rgba(255, 255, 255, 0.12);
+  --bg-glass: rgba(15, 15, 15, 0.7);
+  --bg-glass-active: rgba(25, 25, 25, 0.85);
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.8), 0 1px 5px rgba(0, 0, 0, 0.5);
+  
+  --scrollbar-track: 240 10% 5%;
+  --scrollbar-thumb: 240 5% 25%;
+}
+
+:root[data-theme="light"] {
+  --bg-primary: 0 0% 98%;
+  --bg-secondary: 0 0% 95%;
+  --bg-tertiary: 0 0% 90%;
+  
+  --text-primary: 240 10% 3.9%;
+  --text-secondary: 240 5% 35%;
+  --text-muted: 240 5% 55%;
+
+  --border-glass: rgba(0, 0, 0, 0.06);
+  --border-glass-hover: rgba(0, 0, 0, 0.12);
+  --bg-glass: rgba(255, 255, 255, 0.75);
+  --bg-glass-active: rgba(245, 245, 245, 0.9);
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12), 0 1px 5px rgba(0, 0, 0, 0.08);
+
+  --scrollbar-track: 0 0% 93%;
+  --scrollbar-thumb: 0 0% 75%;
+}
+
+/* Accent Color Mappings */
+:root[data-accent="violet"] {
+  --accent-primary: 262.1 83.3% 57.8%; /* Violet */
+  --accent-glow: rgba(139, 92, 246, 0.15);
+  --accent-gradient: linear-gradient(135deg, hsl(262.1 83.3% 57.8%), hsl(316 80% 50%));
+}
+
+:root[data-accent="emerald"] {
+  --accent-primary: 142.1 76.2% 36.3%; /* Emerald */
+  --accent-glow: rgba(16, 185, 129, 0.15);
+  --accent-gradient: linear-gradient(135deg, hsl(142.1 76.2% 36.3%), hsl(190 90% 40%));
+}
+
+:root[data-accent="indigo"] {
+  --accent-primary: 221.2 83.2% 53.3%; /* Indigo */
+  --accent-glow: rgba(59, 130, 246, 0.15);
+  --accent-gradient: linear-gradient(135deg, hsl(221.2 83.2% 53.3%), hsl(262 80% 50%));
+}
+
+:root[data-accent="crimson"] {
+  --accent-primary: 346.8 77.2% 49.8%; /* Crimson */
+  --accent-glow: rgba(225, 29, 72, 0.15);
+  --accent-gradient: linear-gradient(135deg, hsl(346.8 77.2% 49.8%), hsl(20 90% 50%));
+}

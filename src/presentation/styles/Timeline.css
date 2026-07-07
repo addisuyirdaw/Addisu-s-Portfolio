@@ -1,0 +1,191 @@
+/* Interactive Timeline and Filtering Styles */
+
+.timeline-section-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* Timeline Filter Controls */
+.timeline-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.timeline-search {
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+  position: relative;
+}
+
+.timeline-search input {
+  width: 100%;
+  padding: 0.65rem 1rem 0.65rem 2.5rem;
+  background: var(--bg-glass-active);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  color: hsl(var(--text-primary));
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.timeline-search input:focus {
+  border-color: hsl(var(--accent-primary));
+}
+
+.timeline-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: hsl(var(--text-muted));
+  pointer-events: none;
+}
+
+.timeline-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.filter-chip {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-glass-hover);
+  background: var(--bg-glass);
+  color: hsl(var(--text-secondary));
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: var(--font-header);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.filter-chip:hover, .filter-chip.active {
+  background: var(--accent-gradient);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+/* Timeline Vertical Line */
+.timeline-track {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) 0;
+}
+
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 31px; /* Center alignment on small, left alignment on large */
+  width: 2px;
+  background: var(--border-glass-hover);
+}
+
+/* Timeline Node */
+.timeline-item {
+  position: relative;
+  margin-bottom: var(--spacing-xl);
+  padding-left: 70px;
+  transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+}
+
+.timeline-marker {
+  position: absolute;
+  left: 17px;
+  top: 6px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-round);
+  background: hsl(var(--bg-secondary));
+  border: 2px solid var(--border-glass-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all var(--transition-smooth);
+  color: hsl(var(--text-secondary));
+}
+
+.timeline-item:hover .timeline-marker, .timeline-item.featured .timeline-marker {
+  border-color: hsl(var(--accent-primary));
+  box-shadow: 0 0 10px var(--accent-glow);
+  color: hsl(var(--accent-primary));
+  background: var(--bg-glass-active);
+}
+
+/* Timeline Card */
+.timeline-card {
+  padding: var(--spacing-lg);
+  position: relative;
+}
+
+.timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.timeline-tag-category {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--accent-glow);
+  color: hsl(var(--accent-primary));
+  text-transform: uppercase;
+}
+
+.timeline-date-label {
+  font-size: 0.85rem;
+  color: hsl(var(--text-muted));
+  font-weight: 600;
+}
+
+.timeline-event-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: hsl(var(--text-primary));
+  margin: var(--spacing-xs) 0;
+}
+
+.timeline-event-org {
+  font-size: 0.95rem;
+  color: hsl(var(--accent-primary));
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+.timeline-event-body {
+  font-size: 0.95rem;
+  color: hsl(var(--text-secondary));
+}
+
+.timeline-event-body ul {
+  padding-left: var(--spacing-md);
+  margin-top: var(--spacing-xs);
+}
+
+.timeline-event-body li {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Responsive adjust */
+@media (min-width: 768px) {
+  /* We can keep it left aligned for simplicity, but cleaner looking. Let's keep this clean left track */
+}

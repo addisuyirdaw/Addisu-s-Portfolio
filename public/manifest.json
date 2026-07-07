@@ -1,0 +1,37 @@
+{
+  "name": "Addisu Yirdaw Deresse — Career Platform",
+  "short_name": "Addisu.me",
+  "description": "World-class portfolio and career management platform by Addisu Yirdaw Deresse — AI Developer, Mobile App Builder, Student Leader from Ethiopia.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "categories": ["portfolio", "developer", "career"],
+  "icons": [
+    {
+      "src": "/profile-avatar.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/profile-avatar.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "View Projects",
+      "url": "/#projects",
+      "description": "Browse Addisu's development projects"
+    },
+    {
+      "name": "Contact Addisu",
+      "url": "/#contact",
+      "description": "Get in touch with Addisu"
+    }
+  ]
+}
