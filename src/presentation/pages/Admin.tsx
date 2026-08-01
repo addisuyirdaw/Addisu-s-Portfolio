@@ -61,6 +61,12 @@ export const Admin: React.FC = () => {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
 
+  // Forgot Password States
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotStatus, setForgotStatus] = useState<{ type: 'success' | 'error' | 'mock'; message: string } | null>(null);
+
   // Account Security States
   const [securityEmail, setSecurityEmail] = useState('');
   const [securityPassword, setSecurityPassword] = useState('');
@@ -309,6 +315,35 @@ export const Admin: React.FC = () => {
       } else {
         setAuthError(err.message || 'Authentication failed.');
       }
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotStatus(null);
+    setForgotLoading(true);
+    try {
+      if (!isSupabaseMode) {
+        // Mock mode: simulate and inform
+        await authGateway.resetPasswordForEmail(forgotEmail, '');
+        setForgotStatus({
+          type: 'mock',
+          message:
+            '⚠️ Running in Mock Mode — no real email is sent. Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable real password reset emails.'
+        });
+      } else {
+        const redirectTo = `${window.location.origin}/reset-password`;
+        await authGateway.resetPasswordForEmail(forgotEmail, redirectTo);
+        setForgotStatus({
+          type: 'success',
+          message: `✅ Reset link sent to ${forgotEmail}. Check your inbox and click the link to set a new password.`
+        });
+        setForgotEmail('');
+      }
+    } catch (err: any) {
+      setForgotStatus({ type: 'error', message: err.message || 'Failed to send reset email.' });
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -603,42 +638,139 @@ export const Admin: React.FC = () => {
           <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '1.5rem', fontWeight: 800 }}>
             CMS Administrator Login
           </h2>
-          
-          <form onSubmit={handleLogin}>
-            {authError && (
-              <div style={{ padding: '10px', background: 'rgba(225,29,72,0.1)', border: '1px solid #e11d48', borderRadius: '8px', color: '#e11d48', marginBottom: '15px', fontSize: '0.85rem' }}>
-                {authError}
+
+          {!showForgotPassword ? (
+            // ── Login Form ──────────────────────────────────────────────────
+            <>
+              <form onSubmit={handleLogin}>
+                {authError && (
+                  <div style={{ padding: '10px', background: 'rgba(225,29,72,0.1)', border: '1px solid #e11d48', borderRadius: '8px', color: '#e11d48', marginBottom: '15px', fontSize: '0.85rem' }}>
+                    {authError}
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    id="admin-email"
+                    type="email"
+                    className="form-input"
+                    placeholder="your-email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Security Password</label>
+                  <input
+                    id="admin-password"
+                    type="password"
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button id="admin-login-btn" type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
+                  Authenticate Credentials
+                </button>
+              </form>
+
+              {/* Forgot Password link */}
+              <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                <button
+                  id="forgot-password-toggle"
+                  type="button"
+                  onClick={() => { setShowForgotPassword(true); setForgotStatus(null); setForgotEmail(''); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'hsl(var(--accent))',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    textDecoration: 'underline',
+                    padding: 0
+                  }}
+                >
+                  Forgot Password?
+                </button>
               </div>
-            )}
-            
-            <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input 
-                type="email" 
-                className="form-input" 
-                placeholder="your-email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+            </>
+          ) : (
+            // ── Forgot Password Panel ────────────────────────────────────
+            <>
+              <p style={{ fontSize: '0.9rem', color: 'hsl(var(--text-muted))', marginBottom: '16px', textAlign: 'center' }}>
+                Enter your admin email and we'll send you a secure reset link.
+              </p>
 
-            <div className="form-group">
-              <label className="form-label">Security Password</label>
-              <input 
-                type="password" 
-                className="form-input" 
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+              {forgotStatus && (
+                <div style={{
+                  padding: '12px',
+                  background: forgotStatus.type === 'success'
+                    ? 'rgba(34,197,94,0.12)'
+                    : forgotStatus.type === 'mock'
+                    ? 'rgba(245,158,11,0.12)'
+                    : 'rgba(225,29,72,0.1)',
+                  border: `1px solid ${forgotStatus.type === 'success' ? '#22c55e' : forgotStatus.type === 'mock' ? '#f59e0b' : '#e11d48'}`,
+                  borderRadius: '8px',
+                  color: forgotStatus.type === 'success' ? '#22c55e' : forgotStatus.type === 'mock' ? '#f59e0b' : '#e11d48',
+                  marginBottom: '16px',
+                  fontSize: '0.82rem',
+                  lineHeight: 1.5
+                }}>
+                  {forgotStatus.message}
+                </div>
+              )}
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
-              Authenticate Credentials
-            </button>
-          </form>
+              <form onSubmit={handleForgotPassword}>
+                <div className="form-group">
+                  <label className="form-label">Admin Email Address</label>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    className="form-input"
+                    placeholder="your-email@example.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button
+                  id="send-reset-link-btn"
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ width: '100%', marginTop: '8px' }}
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? 'Sending…' : 'Send Reset Link'}
+                </button>
+              </form>
+
+              <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                <button
+                  id="back-to-login-btn"
+                  type="button"
+                  onClick={() => { setShowForgotPassword(false); setForgotStatus(null); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'hsl(var(--text-muted))',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    textDecoration: 'underline',
+                    padding: 0
+                  }}
+                >
+                  ← Back to Login
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );

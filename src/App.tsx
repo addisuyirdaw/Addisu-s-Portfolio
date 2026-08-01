@@ -3,6 +3,7 @@ import { Navbar } from './presentation/components/Navbar';
 import { Home } from './presentation/pages/Home';
 import { ProjectDetail } from './presentation/pages/ProjectDetail';
 import { Admin } from './presentation/pages/Admin';
+import { ResetPassword } from './presentation/pages/ResetPassword';
 import { RecruiterDashboard } from './presentation/components/RecruiterDashboard';
 import { ResumeBuilder } from './presentation/components/ResumeBuilder';
 import { AIAssistant } from './presentation/components/AIAssistant';
@@ -34,6 +35,7 @@ export const App: React.FC = () => {
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
 
   // Synchronize browser history / URL pathnames with React states
   useEffect(() => {
@@ -52,9 +54,12 @@ export const App: React.FC = () => {
       setSelectedBlogSlug(null);
       setSelectedCertificateSlug(null);
       setIsGalleryOpen(false);
+      setIsResetPasswordOpen(false);
 
       if (path === '/admin') {
         setIsAdminPortalOpen(true);
+      } else if (path === '/reset-password') {
+        setIsResetPasswordOpen(true);
       } else if (path === '/resume') {
         setIsResumeBuilderOpen(true);
       } else if (path === '/recruiter') {
@@ -103,6 +108,10 @@ export const App: React.FC = () => {
 
   // Dynamic Routing Renderer
   const renderContent = () => {
+    if (isResetPasswordOpen) {
+      return <ResetPassword onNavigate={navigateTo} />;
+    }
+
     if (isAdminPortalOpen) {
       return (
         <div style={{ position: 'relative' }}>

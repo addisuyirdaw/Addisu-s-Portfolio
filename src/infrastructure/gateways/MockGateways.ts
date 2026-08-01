@@ -152,6 +152,16 @@ export class MockAuthGateway implements AuthGateway {
       }
     };
   }
+
+  async resetPasswordForEmail(email: string, _redirectTo: string): Promise<void> {
+    // Mock mode: no real email is sent. Log a notice and simulate success.
+    console.warn(
+      `[Mock] Password reset requested for "${email}". ` +
+      'No email is sent in Mock Mode. Configure Supabase env vars to enable real password resets.'
+    );
+    // Simulate network delay
+    await new Promise(r => setTimeout(r, 800));
+  }
 }
 
 export class MockProjectRepository implements ProjectRepository {

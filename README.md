@@ -98,7 +98,77 @@ src/
 ## 🔒 Administration Access
 
 *   **Route:** `/admin`
-*   **Default Credentials (Mock Mode):**
-    *   **Email:** `admin@addisu.com`
-    *   **Password:** `admin123`
-*   *Note: For production environments, utilize Supabase Auth with Row-Level Security (RLS) policies enabled.*
+
+### Mock Mode (Local Dev / No Supabase)
+
+When `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are not set the platform falls back to a fully functional **LocalStorage Mock Gateway**.
+
+| Field    | Default Value       |
+|----------|---------------------|
+| Email    | `admin@addisu.com`  |
+| Password | `admin123`          |
+
+> **Change these immediately** via Admin → Settings → Security after your first login.
+
+---
+
+## 🔑 Deploying to Vercel — Environment Variables
+
+> **Important:** Never hardcode Supabase credentials in source code. Always use environment variables.
+
+### Step-by-Step Setup
+
+1.  **Create a Supabase project** at [supabase.com](https://supabase.com) (free tier works fine).
+
+2.  **Copy your project credentials** from the Supabase dashboard:
+    -   Go to **Project Settings → API**
+    -   Copy the **Project URL** and the **`anon` / public key**
+
+3.  **Add them to Vercel:**
+    ```
+    Vercel Dashboard → Your Project → Settings → Environment Variables
+    ```
+    Add the following two variables (select **Production**, **Preview**, and **Development**):
+
+    | Variable Name           | Value                                |
+    |-------------------------|--------------------------------------|
+    | `VITE_SUPABASE_URL`     | `https://xxxxxxxxxxxx.supabase.co`   |
+    | `VITE_SUPABASE_ANON_KEY`| `your-anon-key-here`                 |
+
+4.  **Redeploy** the project after adding the variables:
+    ```
+    Vercel Dashboard → Deployments → Redeploy (or push a new commit)
+    ```
+
+5.  **Enable Email Auth in Supabase:**
+    -   Go to **Authentication → Providers → Email** and ensure it is enabled.
+    -   Optionally disable "Confirm email" for the admin-only use case.
+
+6.  **Create the admin user:**
+    -   Go to **Authentication → Users → Invite user** and enter your email.
+    -   Or use the SQL editor:
+      ```sql
+      -- Run in Supabase SQL Editor
+      SELECT supabase_auth.admin_create_user(
+        email := 'your-admin@email.com',
+        password := 'YourSecurePassword123!'
+      );
+      ```
+
+### Password Reset Flow (Supabase Mode)
+
+1.  Navigate to `/admin`.
+2.  Click **Forgot Password?** below the login form.
+3.  Enter the admin email and click **Send Reset Link**.
+4.  Supabase sends an email with a link that redirects to `/reset-password`.
+5.  Enter and confirm the new password → the platform updates Supabase Auth and redirects back to `/admin`.
+
+### Local Development
+
+For local dev with Supabase, create a `.env` file (already gitignored):
+```env
+VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+Without these variables the app runs in **Mock Mode** — fully functional for development, with data persisted in localStorage.
+

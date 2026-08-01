@@ -80,6 +80,12 @@ export class SupabaseAuthGateway implements AuthGateway {
     const { error } = await supabase!.auth.updateUser(updateData);
     if (error) throw error;
   }
+
+  async resetPasswordForEmail(email: string, redirectTo: string): Promise<void> {
+    if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+    const { error } = await supabase!.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw error;
+  }
 }
 
 export class SupabaseProjectRepository implements ProjectRepository {

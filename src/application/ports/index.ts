@@ -19,6 +19,8 @@ export interface AuthGateway {
   getSession(): Promise<any>;
   onAuthStateChange(callback: (event: string, session: any) => void): { unsubscribe: () => void };
   updateUser(email?: string, password?: string): Promise<void>;
+  /** Sends a password-reset email. redirectTo should be the full URL of /reset-password. */
+  resetPasswordForEmail(email: string, redirectTo: string): Promise<void>;
 }
 
 export interface ProjectRepository {

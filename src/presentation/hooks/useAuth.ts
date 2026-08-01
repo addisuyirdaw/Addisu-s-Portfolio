@@ -1,6 +1,7 @@
 /**
  * Presentation Hook: useAuth
  * Presenter for admin authentication state, backed by the AuthGateway port.
+ * Subscribes reactively to Supabase onAuthStateChange (handles PASSWORD_RECOVERY events).
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,6 +15,7 @@ interface UseAuthReturn {
   loginAttempts: number;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<void>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -41,6 +43,22 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     checkSession();
+
+    // Subscribe to real-time auth state changes (e.g. PASSWORD_RECOVERY token from email link)
+    const { unsubscribe } = authGateway.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+        if (session) {
+          setUser(session.user || { email: 'admin@addisu.com' });
+          setIsAuthenticated(true);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [checkSession]);
 
   const login = async (email: string, password: string): Promise<void> => {
@@ -66,5 +84,10 @@ export function useAuth(): UseAuthReturn {
     setIsAuthenticated(false);
   };
 
-  return { isAuthenticated, user, loading, error, loginAttempts, login, logout };
+  const resetPasswordForEmail = async (email: string): Promise<void> => {
+    const redirectTo = `${window.location.origin}/reset-password`;
+    await authGateway.resetPasswordForEmail(email, redirectTo);
+  };
+
+  return { isAuthenticated, user, loading, error, loginAttempts, login, logout, resetPasswordForEmail };
 }
