@@ -49,12 +49,13 @@ export const MediaManager: React.FC = () => {
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
-        // Optimize WebP naming & formats (simulated image check on upload)
         await mediaStorage.uploadFile(selectedFiles[i], currentFolder);
       }
       loadFiles();
-    } catch (err) {
-      alert('Error uploading media file. Check size limits.');
+    } catch (err: any) {
+      // Show the REAL error from Supabase Storage so the root cause is visible
+      const msg = err?.message || String(err) || 'Unknown upload error';
+      alert(`Upload failed: ${msg}\n\nIf you see "Bucket not found", run the migration SQL in supabase/migrations/20260913_storage_and_cms_enhancements.sql against your Supabase project.`);
     } finally {
       setUploading(false);
     }
@@ -142,6 +143,24 @@ export const MediaManager: React.FC = () => {
 
   return (
     <div>
+      {/* LocalStorage mode warning — files uploaded here will NOT persist */}
+      {!isSupabaseMode && (
+        <div style={{
+          background: 'rgba(245,158,11,0.15)',
+          border: '1px solid rgba(245,158,11,0.5)',
+          borderRadius: '10px',
+          padding: '10px 16px',
+          marginBottom: '16px',
+          fontSize: '0.82rem',
+          color: '#fbbf24',
+          lineHeight: 1.6
+        }}>
+          ⚠️ <strong>LocalStorage Mode:</strong> Files uploaded here are stored as Base64 in your browser's localStorage only.
+          They will disappear when you refresh, clear your browser, or view from another device.
+          To enable persistent Supabase Storage, add <code style={{ background: 'rgba(0,0,0,0.2)', padding: '1px 4px', borderRadius: '3px' }}>VITE_SUPABASE_URL</code> and{' '}
+          <code style={{ background: 'rgba(0,0,0,0.2)', padding: '1px 4px', borderRadius: '3px' }}>VITE_SUPABASE_ANON_KEY</code> to Vercel and redeploy.
+        </div>
+      )}
       <div className="media-manager-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           {currentFolder !== 'root' && (

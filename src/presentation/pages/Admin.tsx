@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   authGateway, 
   projectRepository, 
@@ -10,7 +10,8 @@ import {
   analyticsRepository,
   blogRepository,
   testimonialRepository,
-  isSupabaseMode
+  isSupabaseMode,
+  mediaStorage
 } from '../../infrastructure/gateways';
 import type { 
   Project, 
@@ -100,6 +101,16 @@ export const Admin: React.FC = () => {
   const [replySubject, setReplySubject] = useState('');
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
+
+  // Async save state machine — prevents silent failures
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
+  // Inline file-upload states (so cert/project forms can upload directly without leaving the form)
+  const [certFileUploading, setCertFileUploading] = useState(false);
+  const [projectCoverUploading, setProjectCoverUploading] = useState(false);
+  const certFileInputRef = useRef<HTMLInputElement>(null);
+  const projectCoverInputRef = useRef<HTMLInputElement>(null);
 
   // Form Fields States
   const [projectForm, setProjectForm] = useState({
@@ -393,6 +404,8 @@ export const Admin: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError('');
+    setIsSaving(true);
     try {
       if (modalType === 'project') {
         const payload = {
@@ -468,11 +481,63 @@ export const Admin: React.FC = () => {
         }
       }
 
+      // Only close modal AFTER the database operation succeeds
       setShowModal(false);
       setEditingId(null);
       refreshData();
     } catch (err: any) {
-      alert(err.message || 'Error saving record.');
+      // Show the real error inline — do NOT close the form or reset the user's input
+      setSaveError(err.message || 'Failed to save record. Check your connection and try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Upload a file directly from the cert form and fill the file_url field with the persistent Supabase URL
+  const handleCertFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCertFileUploading(true);
+    setSaveError('');
+    try {
+      if (!isSupabaseMode) {
+        setSaveError('⚠️ File uploads require Supabase to be configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your Vercel environment, then redeploy.');
+        return;
+      }
+      const result = await mediaStorage.uploadFile(file, 'Certificates');
+      const publicUrl = mediaStorage.getPublicUrl(result.file_path);
+      setCertForm(prev => ({ ...prev, file_url: publicUrl }));
+    } catch (err: any) {
+      setSaveError(`Upload failed: ${err.message || 'Unknown storage error'}`);
+    } finally {
+      setCertFileUploading(false);
+      // Reset the file input so the same file can be re-uploaded if needed
+      if (certFileInputRef.current) certFileInputRef.current.value = '';
+    }
+  };
+
+  // Upload a project image and append its URL to the screenshots list
+  const handleProjectCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProjectCoverUploading(true);
+    setSaveError('');
+    try {
+      if (!isSupabaseMode) {
+        setSaveError('⚠️ File uploads require Supabase to be configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your Vercel environment, then redeploy.');
+        return;
+      }
+      const result = await mediaStorage.uploadFile(file, 'Projects');
+      const publicUrl = mediaStorage.getPublicUrl(result.file_path);
+      setProjectForm(prev => ({
+        ...prev,
+        screenshots: prev.screenshots ? `${prev.screenshots}\n${publicUrl}` : publicUrl
+      }));
+    } catch (err: any) {
+      setSaveError(`Upload failed: ${err.message || 'Unknown storage error'}`);
+    } finally {
+      setProjectCoverUploading(false);
+      if (projectCoverInputRef.current) projectCoverInputRef.current.value = '';
     }
   };
 
@@ -778,6 +843,34 @@ export const Admin: React.FC = () => {
 
   return (
     <div className="admin-layout">
+      {/* ── Persistence Mode Warning Banner ──────────────────────────────────────
+          Shown whenever Supabase is NOT configured. In this state every upload
+          goes to MockMediaStorage (Base64 in localStorage) and will disappear
+          on refresh, on another device, or when localStorage is cleared.
+          To fix: add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to Vercel
+          environment variables and redeploy. */}
+      {!isSupabaseMode && (
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 3000,
+          background: 'rgba(245,158,11,0.95)',
+          color: '#1a1a1a',
+          padding: '10px 20px',
+          fontWeight: 700,
+          fontSize: '0.85rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          backdropFilter: 'blur(4px)'
+        }}>
+          ⚠️ <strong>LocalStorage Mode — Files Will NOT Persist.</strong>&nbsp;
+          Supabase is not configured. All uploads are stored in browser localStorage only and will disappear on refresh or on another device.
+          &nbsp;Fix: add <code style={{ background: 'rgba(0,0,0,0.15)', padding: '1px 5px', borderRadius: '3px' }}>VITE_SUPABASE_URL</code> and&nbsp;
+          <code style={{ background: 'rgba(0,0,0,0.15)', padding: '1px 5px', borderRadius: '3px' }}>VITE_SUPABASE_ANON_KEY</code>&nbsp;
+          to your Vercel environment variables, then redeploy.
+        </div>
+      )}
       {/* Sidebar Admin Navigation */}
       <aside className="admin-sidebar" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         <ul className="admin-sidebar-nav">
@@ -1771,8 +1864,10 @@ export const Admin: React.FC = () => {
             border: '1px solid var(--border-glass)'
           }}>
             <button 
-              onClick={() => setShowModal(false)}
-              style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--text-secondary))' }}
+              onClick={() => { if (!isSaving) { setShowModal(false); setSaveError(''); } }}
+              disabled={isSaving}
+              style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: isSaving ? 'not-allowed' : 'pointer', color: 'hsl(var(--text-secondary))', opacity: isSaving ? 0.4 : 1 }}
+              title={isSaving ? 'Saving in progress…' : 'Close'}
             >
               <X size={20} />
             </button>
@@ -1780,6 +1875,23 @@ export const Admin: React.FC = () => {
             <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '20px', textTransform: 'capitalize' }}>
               {editingId ? 'Edit record' : 'Create new entry'} ({modalType})
             </h3>
+
+            {/* Inline save error — real error from the DB/Storage, form data is preserved */}
+            {saveError && (
+              <div style={{
+                padding: '10px 14px',
+                background: 'rgba(225,29,72,0.12)',
+                border: '1px solid #e11d48',
+                borderRadius: '8px',
+                color: '#fca5a5',
+                fontSize: '0.85rem',
+                lineHeight: 1.5,
+                marginBottom: '16px',
+                wordBreak: 'break-word'
+              }}>
+                ❌ {saveError}
+              </div>
+            )}
 
             <form onSubmit={handleSave}>
               {/* Project Form Fields */}
@@ -1886,8 +1998,44 @@ export const Admin: React.FC = () => {
                     <input type="text" className="form-input" value={projectForm.team_members} onChange={e => setProjectForm({...projectForm, team_members: e.target.value})} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Screenshots Gallery (New Line Separated URL Paths)</label>
-                    <textarea className="form-textarea" rows={2} value={projectForm.screenshots} onChange={e => setProjectForm({...projectForm, screenshots: e.target.value})} />
+                    <label className="form-label">Screenshots / Images</label>
+                    {/* Direct upload — each uploaded file's URL is appended to the list below */}
+                    <label
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '7px 12px',
+                        marginBottom: '8px',
+                        background: projectCoverUploading ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)',
+                        border: '1px solid rgba(99,102,241,0.4)',
+                        color: '#a5b4fc',
+                        borderRadius: '8px',
+                        cursor: projectCoverUploading ? 'not-allowed' : 'pointer',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        opacity: projectCoverUploading ? 0.7 : 1
+                      }}
+                      title={!isSupabaseMode ? 'Supabase not configured — uploads will not persist' : 'Upload image to Supabase Storage and append URL'}
+                    >
+                      <Upload size={14} />
+                      {projectCoverUploading ? 'Uploading…' : 'Upload Image → Append URL'}
+                      <input
+                        ref={projectCoverInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        disabled={projectCoverUploading}
+                        onChange={handleProjectCoverUpload}
+                      />
+                    </label>
+                    <textarea
+                      className="form-textarea"
+                      rows={3}
+                      placeholder="One public URL per line (use Upload Image button above to auto-fill)"
+                      value={projectForm.screenshots}
+                      onChange={e => setProjectForm({...projectForm, screenshots: e.target.value})}
+                    />
                   </div>
                   
                   <div className="form-group">
@@ -2026,8 +2174,56 @@ export const Admin: React.FC = () => {
                     <input type="url" className="form-input" value={certForm.credential_url} onChange={e => setCertForm({...certForm, credential_url: e.target.value})} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Certificate PDF/Image File Path (uploaded from Media Manager)</label>
-                    <input type="text" placeholder="Certificates/certificate_name_12345.pdf" className="form-input" value={certForm.file_url} onChange={e => setCertForm({...certForm, file_url: e.target.value})} />
+                    <label className="form-label">Certificate File (PDF or Image)</label>
+                    {/* Direct upload — uploads to Supabase Storage and fills the URL automatically */}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        style={{ flex: 1, minWidth: '200px' }}
+                        placeholder="Paste URL or use the upload button →"
+                        value={certForm.file_url}
+                        onChange={e => setCertForm({...certForm, file_url: e.target.value})}
+                      />
+                      <label
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 12px',
+                          background: certFileUploading ? 'rgba(99,102,241,0.3)' : 'var(--accent-gradient, hsl(250,80%,55%))',
+                          color: '#fff',
+                          borderRadius: '8px',
+                          cursor: certFileUploading ? 'not-allowed' : 'pointer',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          whiteSpace: 'nowrap',
+                          opacity: certFileUploading ? 0.7 : 1
+                        }}
+                        title={!isSupabaseMode ? 'Supabase not configured — uploads will not persist' : 'Upload file to Supabase Storage'}
+                      >
+                        <Upload size={14} />
+                        {certFileUploading ? 'Uploading…' : 'Upload File'}
+                        <input
+                          ref={certFileInputRef}
+                          type="file"
+                          accept=".pdf,image/*"
+                          style={{ display: 'none' }}
+                          disabled={certFileUploading}
+                          onChange={handleCertFileUpload}
+                        />
+                      </label>
+                    </div>
+                    {certForm.file_url && (
+                      <p style={{ fontSize: '0.75rem', color: '#22c55e', marginTop: '5px', wordBreak: 'break-all' }}>
+                        ✅ File URL set: {certForm.file_url}
+                      </p>
+                    )}
+                    {!isSupabaseMode && (
+                      <p style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '4px' }}>
+                        ⚠️ Supabase not configured — uploaded file will only exist in localStorage and will disappear on refresh.
+                      </p>
+                    )}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Category</label>
@@ -2163,9 +2359,14 @@ export const Admin: React.FC = () => {
                 </>
               )}
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%', marginTop: '10px', opacity: isSaving ? 0.7 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
+                disabled={isSaving || certFileUploading || projectCoverUploading}
+              >
                 <Save size={16} />
-                <span>Save Record</span>
+                <span>{isSaving ? 'Saving to database…' : 'Save Record'}</span>
               </button>
             </form>
           </div>
