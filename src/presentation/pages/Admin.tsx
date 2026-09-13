@@ -843,34 +843,6 @@ export const Admin: React.FC = () => {
 
   return (
     <div className="admin-layout">
-      {/* ── Persistence Mode Warning Banner ──────────────────────────────────────
-          Shown whenever Supabase is NOT configured. In this state every upload
-          goes to MockMediaStorage (Base64 in localStorage) and will disappear
-          on refresh, on another device, or when localStorage is cleared.
-          To fix: add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to Vercel
-          environment variables and redeploy. */}
-      {!isSupabaseMode && (
-        <div style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 3000,
-          background: 'rgba(245,158,11,0.95)',
-          color: '#1a1a1a',
-          padding: '10px 20px',
-          fontWeight: 700,
-          fontSize: '0.85rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          backdropFilter: 'blur(4px)'
-        }}>
-          ⚠️ <strong>LocalStorage Mode — Files Will NOT Persist.</strong>&nbsp;
-          Supabase is not configured. All uploads are stored in browser localStorage only and will disappear on refresh or on another device.
-          &nbsp;Fix: add <code style={{ background: 'rgba(0,0,0,0.15)', padding: '1px 5px', borderRadius: '3px' }}>VITE_SUPABASE_URL</code> and&nbsp;
-          <code style={{ background: 'rgba(0,0,0,0.15)', padding: '1px 5px', borderRadius: '3px' }}>VITE_SUPABASE_ANON_KEY</code>&nbsp;
-          to your Vercel environment variables, then redeploy.
-        </div>
-      )}
       {/* Sidebar Admin Navigation */}
       <aside className="admin-sidebar" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         <ul className="admin-sidebar-nav">
@@ -935,6 +907,27 @@ export const Admin: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="admin-content">
+        {!isSupabaseMode && (
+          <div style={{
+            background: 'rgba(245,158,11,0.1)',
+            border: '1px solid rgba(245,158,11,0.35)',
+            borderRadius: '10px',
+            padding: '12px 18px',
+            marginBottom: '20px',
+            color: '#fbbf24',
+            fontSize: '0.84rem',
+            lineHeight: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <span>⚠️</span>
+            <div>
+              <strong>LocalStorage Mode:</strong> Supabase is not configured yet in Vercel. Edits and uploads are temporarily kept in your browser's local storage.
+              To enable cloud database persistence, add <code style={{ background: 'rgba(0,0,0,0.25)', padding: '2px 6px', borderRadius: '4px' }}>VITE_SUPABASE_URL</code> and <code style={{ background: 'rgba(0,0,0,0.25)', padding: '2px 6px', borderRadius: '4px' }}>VITE_SUPABASE_ANON_KEY</code> in Vercel Settings &rarr; Environment Variables, then redeploy.
+            </div>
+          </div>
+        )}
         
         {/* Tab 1: Dashboard Analytics */}
         {activeTab === 'dashboard' && (
