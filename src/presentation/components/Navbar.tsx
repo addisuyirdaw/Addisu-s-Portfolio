@@ -8,7 +8,6 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   isRecruiterMode: boolean;
   setIsRecruiterMode: (mode: boolean) => void;
-  onOpenAdmin?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,7 +15,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   isRecruiterMode,
   setIsRecruiterMode,
-  onOpenAdmin,
 }) => {
   const { theme, accent, toggleTheme, setAccent } = useTheme();
   const { language, setLanguage, t } = useLanguage();

@@ -240,7 +240,6 @@ export const App: React.FC = () => {
         setIsRecruiterMode={(mode) => {
           navigateTo(mode ? '/recruiter' : '/');
         }}
-        onOpenAdmin={() => navigateTo('/admin')}
       />
 
       {/* Main View Port content */}
