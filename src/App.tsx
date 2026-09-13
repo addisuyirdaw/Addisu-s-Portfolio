@@ -97,7 +97,32 @@ export const App: React.FC = () => {
     // Trigger initial route parsing
     handleLocationChange();
 
-    return () => window.removeEventListener('popstate', handleLocationChange);
+    // Hidden trigger: typing "admin" or pressing Ctrl+Shift+A opens the admin portal
+    let keyBuffer = '';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        navigateTo('/admin');
+        return;
+      }
+      if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        keyBuffer = (keyBuffer + e.key.toLowerCase()).slice(-5);
+        if (keyBuffer === 'admin') {
+          keyBuffer = '';
+          navigateTo('/admin');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const navigateTo = (path: string) => {

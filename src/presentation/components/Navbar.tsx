@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Sun, Moon, Briefcase, Lock, Menu, X, Globe } from 'lucide-react';
+import { Sun, Moon, Briefcase, Menu, X, Globe } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isRecruiterMode: boolean;
   setIsRecruiterMode: (mode: boolean) => void;
-  onOpenAdmin: () => void;
+  onOpenAdmin?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -101,11 +101,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Theme Mode Toggle */}
           <button className="nav-btn" onClick={toggleTheme} title="Toggle Theme">
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-
-          {/* Admin Login Trigger */}
-          <button className="nav-btn" onClick={onOpenAdmin} title="CMS Admin Portal">
-            <Lock size={18} />
           </button>
 
           {/* Mobile hamburger toggle */}
