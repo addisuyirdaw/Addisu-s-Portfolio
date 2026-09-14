@@ -241,8 +241,8 @@ export const Gallery: React.FC = () => {
                     minHeight: '140px'
                   }}>
                     {(() => {
-                      const isPdf = file.file_type === 'pdf' || file.name.toLowerCase().endsWith('.pdf');
-                      const isVideo = file.file_type === 'video' || file.name.toLowerCase().endsWith('.mp4') || file.name.toLowerCase().endsWith('.webm');
+                      const isPdf = file.file_type === 'pdf' || file.name.toLowerCase().endsWith('.pdf') || (file.file_path && file.file_path.toLowerCase().endsWith('.pdf')) || url.toLowerCase().includes('.pdf');
+                      const isVideo = !isPdf && (file.file_type === 'video' || /\.(mp4|webm|mov|mkv)$/i.test(file.name) || /\.(mp4|webm|mov|mkv)$/i.test(file.file_path || ''));
                       if (isPdf) {
                         return (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '30px', textAlign: 'center' }}>
@@ -394,8 +394,8 @@ export const Gallery: React.FC = () => {
                 overflow: 'auto'
               }} onClick={e => e.stopPropagation()}>
                 {(() => {
-                  const isPdf = file.file_type === 'pdf' || file.name.toLowerCase().endsWith('.pdf');
-                  const isVideo = file.file_type === 'video' || file.name.toLowerCase().endsWith('.mp4') || file.name.toLowerCase().endsWith('.webm');
+                  const isPdf = file.file_type === 'pdf' || file.name.toLowerCase().endsWith('.pdf') || (file.file_path && file.file_path.toLowerCase().endsWith('.pdf')) || url.toLowerCase().includes('.pdf');
+                  const isVideo = !isPdf && (file.file_type === 'video' || /\.(mp4|webm|mov|mkv)$/i.test(file.name) || /\.(mp4|webm|mov|mkv)$/i.test(file.file_path || ''));
                   if (isPdf) {
                     return (
                       <div style={{

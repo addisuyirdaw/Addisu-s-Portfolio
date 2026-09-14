@@ -456,10 +456,14 @@ export const Admin: React.FC = () => {
       } 
       
       else if (modalType === 'cert') {
+        const payload = {
+          ...certForm,
+          slug: certForm.slug?.trim() || certForm.title_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `cert-${Date.now()}`
+        };
         if (editingId) {
-          await achievementRepository.update(editingId, certForm);
+          await achievementRepository.update(editingId, payload);
         } else {
-          await achievementRepository.create(certForm);
+          await achievementRepository.create(payload);
         }
       } 
       
@@ -502,10 +506,6 @@ export const Admin: React.FC = () => {
     setCertFileUploading(true);
     setSaveError('');
     try {
-      if (!isSupabaseMode) {
-        setSaveError('⚠️ File uploads require Supabase to be configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your Vercel environment, then redeploy.');
-        return;
-      }
       const result = await mediaStorage.uploadFile(file, 'Certificates');
       const publicUrl = mediaStorage.getPublicUrl(result.file_path);
       setCertForm(prev => ({ ...prev, file_url: publicUrl }));
@@ -549,22 +549,15 @@ export const Admin: React.FC = () => {
     if (!file) return;
     setAvatarUploading(true);
     try {
-      if (!isSupabaseMode) {
-        alert('⚠️ Supabase must be configured to upload persistent photos.');
-        return;
-      }
       const result = await mediaStorage.uploadFile(file, 'Profile');
       const publicUrl = mediaStorage.getPublicUrl(result.file_path);
       setProfileForm(prev => ({ ...prev, avatar_url: publicUrl }));
       localStorage.setItem('portfolio_avatar_url', publicUrl);
 
-      // Auto-save to repository immediately so it never disappears on refresh
-      try {
-        await profileRepository.update({ ...profileForm, avatar_url: publicUrl });
-        refreshData();
-      } catch (saveErr) {
-        console.warn('Auto-save profile warning:', saveErr);
-      }
+      // Auto-save to repository immediately with only avatar_url so it never disappears on refresh
+      await profileRepository.update({ avatar_url: publicUrl });
+      refreshData();
+      alert('✅ Profile photo uploaded and saved successfully! It is now permanently active across all devices.');
     } catch (err: any) {
       alert(`Upload failed: ${err.message || 'Unknown storage error'}`);
     } finally {

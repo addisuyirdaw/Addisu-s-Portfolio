@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { ArrowRight, MessageSquare, Download } from 'lucide-react';
 
@@ -24,6 +24,13 @@ export const Hero: React.FC<HeroProps> = ({
 }) => {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [avatarUrl]);
+
+  const resolvedAvatar = !imageError ? (avatarUrl || localStorage.getItem('portfolio_avatar_url') || undefined) : undefined;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -174,9 +181,9 @@ export const Hero: React.FC<HeroProps> = ({
                   boxShadow: '0 0 30px var(--accent-glow)',
                   overflow: 'hidden'
                 }}>
-                  {avatarUrl ? (
+                  {resolvedAvatar ? (
                     <img
-                      src={avatarUrl}
+                      src={resolvedAvatar}
                       alt="Addisu Yirdaw Deresse"
                       style={{
                         width: '100%',
@@ -185,10 +192,7 @@ export const Hero: React.FC<HeroProps> = ({
                         objectFit: 'cover',
                         display: 'block'
                       }}
-                      onError={(e) => {
-                        const el = e.currentTarget.parentElement!;
-                        el.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:2.5rem;font-weight:800;color:hsl(var(--accent-primary))">AY</div>';
-                      }}
+                      onError={() => setImageError(true)}
                     />
                   ) : (
                     <div style={{

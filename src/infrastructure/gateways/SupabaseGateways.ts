@@ -247,14 +247,26 @@ export class SupabaseAchievementRepository implements AchievementRepository {
 
   async create(achievement: Omit<Achievement, 'id'>): Promise<Achievement> {
     if (!isSupabaseConfigured) throw new Error('Supabase not configured');
-    const { data, error } = await supabase!.from('achievements').insert([achievement]).select().single();
+    const slug = (achievement.slug && achievement.slug.trim())
+      ? achievement.slug.trim()
+      : (achievement.title_en || 'cert')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '') || `cert-${Date.now()}`;
+    const payload = { ...achievement, slug };
+    const { data, error } = await supabase!.from('achievements').insert([payload]).select().single();
     if (error) throw error;
     return data;
   }
 
   async update(id: string, achievement: Partial<Achievement>): Promise<Achievement> {
     if (!isSupabaseConfigured) throw new Error('Supabase not configured');
-    const { data, error } = await supabase!.from('achievements').update(achievement).eq('id', id).select().single();
+    const payload: Partial<Achievement> = { ...achievement };
+    if (payload.slug !== undefined) {
+      const trimmed = payload.slug.trim();
+      payload.slug = trimmed || (payload.title_en ? payload.title_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : undefined);
+    }
+    const { data, error } = await supabase!.from('achievements').update(payload).eq('id', id).select().single();
     if (error) throw error;
     return data;
   }
@@ -462,7 +474,7 @@ export class SupabaseMediaStorage implements MediaStorage {
         ? 'image'
         : file.type.startsWith('video/')
         ? 'video'
-        : file.name.endsWith('.pdf')
+        : file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf'
         ? 'pdf'
         : 'document',
       file_size: file.size,
@@ -542,10 +554,18 @@ export class SupabaseProfileRepository implements ProfileRepository {
   async get(): Promise<Profile | null> {
     if (!isSupabaseConfigured) return null;
     try {
-      const { data, error } = await supabase!.from('profiles').select('*').limit(1).maybeSingle();
+      const { data, error } = await supabase!
+        .from('profiles')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (error) {
         console.warn('Failed to load profile from Supabase:', error);
         return null;
+      }
+      if (data?.avatar_url) {
+        localStorage.setItem('portfolio_avatar_url', data.avatar_url);
       }
       return data;
     } catch (e) {
@@ -559,7 +579,14 @@ export class SupabaseProfileRepository implements ProfileRepository {
     
     const { data: userData } = await supabase!.auth.getUser();
     const current = await this.get().catch(() => null);
-    const userId = current?.id || userData?.user?.id || '00000000-0000-0000-0000-000000000000';
+
+    // Filter out undefined and empty string overrides to avoid clearing defaults accidentally
+    const cleanOverrides: Record<string, any> = {};
+    for (const [k, v] of Object.entries(profile)) {
+      if (v !== undefined && v !== '') {
+        cleanOverrides[k] = v;
+      }
+    }
 
     const payload = {
       full_name: 'Addisu Yirdaw Deresse',
@@ -569,14 +596,35 @@ export class SupabaseProfileRepository implements ProfileRepository {
       github_url: 'https://github.com/addisuyirdaw',
       linkedin_url: 'https://linkedin.com/in/addisuyirdaw2025',
       ...current,
-      ...profile,
-      id: userId,
+      ...cleanOverrides,
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase!.from('profiles').upsert(payload, { onConflict: 'id' }).select().single();
-    if (error) throw error;
-    return data;
+    let result: Profile;
+    if (current?.id) {
+      const { data, error } = await supabase!
+        .from('profiles')
+        .update(payload)
+        .eq('id', current.id)
+        .select()
+        .single();
+      if (error) throw error;
+      result = data;
+    } else {
+      const targetId = userData?.user?.id || '00000000-0000-0000-0000-000000000000';
+      const { data, error } = await supabase!
+        .from('profiles')
+        .upsert({ ...payload, id: targetId }, { onConflict: 'id' })
+        .select()
+        .single();
+      if (error) throw error;
+      result = data;
+    }
+
+    if (result?.avatar_url) {
+      localStorage.setItem('portfolio_avatar_url', result.avatar_url);
+    }
+    return result;
   }
 }
 

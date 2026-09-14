@@ -15,7 +15,7 @@ import type { Project, Skill, TimelineEvent, Achievement, Testimonial, Blog, Pro
 import { InputSanitizer } from '../../domain/services';
 import { Hero } from '../components/Hero';
 import { TimelineView } from '../components/TimelineView';
-import { Shield, Award, Sparkles, Send, ExternalLink, Calendar, Search } from 'lucide-react';
+import { Shield, Award, Sparkles, Send, ExternalLink, Calendar, Search, FileText } from 'lucide-react';
 
 interface HomeProps {
   onSelectProject: (slug: string) => void;
@@ -418,11 +418,63 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
             {t('certificationsTitle')}
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '20px' }}>
             {filteredAchievements.map(cert => {
-              const isPdf = (cert.file_url || '').toLowerCase().includes('.pdf');
+              const fileUrl = cert.file_url || '';
+              const isPdf = fileUrl.toLowerCase().includes('.pdf');
+              const isImage = !isPdf && fileUrl && (/\.(jpg|jpeg|png|webp|gif|svg)($|\?)/i.test(fileUrl) || fileUrl.startsWith('data:image'));
+              const openModal = () => {
+                window.history.pushState(null, '', `/certificate/${cert.slug || cert.id}`);
+                window.dispatchEvent(new Event('popstate'));
+              };
+
               return (
-                <div key={cert.id} className="glass-card" style={{ margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px' }}>
+                <div key={cert.id} className="glass-card" style={{ margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px', overflow: 'hidden' }}>
+                  {/* Thumbnail / Header Banner */}
+                  {isImage && fileUrl ? (
+                    <div 
+                      onClick={openModal}
+                      style={{ 
+                        width: 'calc(100% + 32px)', 
+                        margin: '-16px -16px 10px -16px', 
+                        height: '140px', 
+                        overflow: 'hidden', 
+                        cursor: 'pointer',
+                        background: 'rgba(0,0,0,0.2)',
+                        position: 'relative'
+                      }}
+                    >
+                      <img 
+                        src={fileUrl} 
+                        alt={cert.title_en} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                      />
+                    </div>
+                  ) : isPdf && fileUrl ? (
+                    <div 
+                      onClick={openModal}
+                      style={{ 
+                        width: 'calc(100% + 32px)', 
+                        margin: '-16px -16px 10px -16px', 
+                        padding: '14px', 
+                        background: 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(15,23,42,0.6) 100%)',
+                        borderBottom: '1px solid rgba(239,68,68,0.25)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <FileText size={28} style={{ color: '#ef4444' }} />
+                      <div>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fca5a5', display: 'block' }}>PDF Credential</span>
+                        <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))' }}>Click to view document ↗</span>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.7rem', background: 'var(--border-glass)', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', color: 'hsl(var(--accent-primary))', fontWeight: 700 }}>
@@ -430,7 +482,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
                       </span>
                       {isPdf && (
                         <span style={{ fontSize: '0.68rem', background: 'rgba(239,68,68,0.15)', color: '#f87171', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                          PDF
+                          PDF Document
                         </span>
                       )}
                       {cert.credential_url && !isPdf && (
@@ -450,24 +502,34 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
                   
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '8px', borderTop: '1px solid var(--border-glass)' }}>
                     <button
-                      onClick={() => {
-                        window.history.pushState(null, '', `/certificate/${cert.slug || cert.id}`);
-                        window.dispatchEvent(new Event('popstate'));
-                      }}
+                      onClick={openModal}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                     >
                       <span>View Credential</span>
                       <span>↗</span>
                     </button>
+                    {isPdf && fileUrl && (
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary"
+                        style={{ fontSize: '0.75rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Open PDF directly in browser"
+                      >
+                        <ExternalLink size={12} />
+                        <span>Open PDF ↗</span>
+                      </a>
+                    )}
                     {cert.credential_url && (
                       <a
                         href={cert.credential_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600, padding: '6px 8px', textDecoration: 'none' }}
+                        style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600, padding: '6px 8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                       >
-                        Verify Link ↗
+                        <span>Verify Online ↗</span>
                       </a>
                     )}
                   </div>

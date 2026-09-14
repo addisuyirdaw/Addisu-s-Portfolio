@@ -1,6 +1,6 @@
 import type { Project, TimelineEvent, Skill, Achievement } from '../../domain/entities';
 import { useLanguage } from '../context/LanguageContext';
-import { Mail, Award, Briefcase, FileText, CheckCircle } from 'lucide-react';
+import { Mail, Award, Briefcase, FileText, CheckCircle, ExternalLink } from 'lucide-react';
 
 interface RecruiterDashboardProps {
   skills: Skill[];
@@ -180,56 +180,73 @@ export const RecruiterDashboard: React.FC<RecruiterDashboardProps> = ({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-            {achievements.map(cert => (
-              <div
-                key={cert.id}
-                style={{
-                  padding: '16px',
-                  borderRadius: '14px',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid var(--border-glass)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '10px'
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.7rem', background: 'var(--accent-glow)', color: 'hsl(var(--accent-primary))', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>
-                      {cert.category}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))' }}>{cert.date_earned}</span>
+            {achievements.map(cert => {
+              const fileUrl = cert.file_url || '';
+              const isPdf = fileUrl.toLowerCase().includes('.pdf');
+              return (
+                <div
+                  key={cert.id}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '14px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid var(--border-glass)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '10px'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.7rem', background: 'var(--accent-glow)', color: 'hsl(var(--accent-primary))', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>
+                        {cert.category}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))' }}>{cert.date_earned}</span>
+                    </div>
+                    <h4 style={{ fontSize: '0.98rem', fontWeight: 700, lineHeight: 1.3 }}>{cert.title_en}</h4>
+                    <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-muted))' }}>Issuer: <strong>{cert.issuer}</strong></p>
                   </div>
-                  <h4 style={{ fontSize: '0.98rem', fontWeight: 700, lineHeight: 1.3 }}>{cert.title_en}</h4>
-                  <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-muted))' }}>Issuer: <strong>{cert.issuer}</strong></p>
-                </div>
 
-                <div style={{ display: 'flex', gap: '8px', marginTop: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => {
-                      window.history.pushState(null, '', `/certificate/${cert.slug || cert.id}`);
-                      window.dispatchEvent(new Event('popstate'));
-                    }}
-                    className="btn btn-secondary"
-                    style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    <span>View Document</span>
-                    <span>↗</span>
-                  </button>
-                  {cert.credential_url && (
-                    <a
-                      href={cert.credential_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 8px' }}
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => {
+                        window.history.pushState(null, '', `/certificate/${cert.slug || cert.id}`);
+                        window.dispatchEvent(new Event('popstate'));
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
-                      <span>Verify Online ↗</span>
-                    </a>
-                  )}
+                      <span>View Document</span>
+                      <span>↗</span>
+                    </button>
+                    {isPdf && fileUrl && (
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary"
+                        style={{ fontSize: '0.75rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Open PDF in new browser tab"
+                      >
+                        <ExternalLink size={12} />
+                        <span>Open PDF ↗</span>
+                      </a>
+                    )}
+                    {cert.credential_url && (
+                      <a
+                        href={cert.credential_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 8px' }}
+                      >
+                        <span>Verify Online ↗</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

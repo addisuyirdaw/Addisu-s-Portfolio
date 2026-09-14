@@ -343,8 +343,15 @@ export class MockAchievementRepository implements AchievementRepository {
 
   async create(achievement: Omit<Achievement, 'id'>): Promise<Achievement> {
     const items = this.getItems();
+    const slug = (achievement.slug && achievement.slug.trim())
+      ? achievement.slug.trim()
+      : (achievement.title_en || 'cert')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '') || `cert-${Date.now()}`;
     const newAchievement: Achievement = {
       ...achievement,
+      slug,
       id: Math.random().toString(36).substring(7)
     };
     items.push(newAchievement);

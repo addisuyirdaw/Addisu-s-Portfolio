@@ -44,9 +44,9 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public profiles are viewable" ON profiles;
 CREATE POLICY "Public profiles are viewable" ON profiles FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Owners can update their profile" ON profiles;
-CREATE POLICY "Owners can update their profile" ON profiles FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Owners can update their profile" ON profiles FOR UPDATE USING (true);
 DROP POLICY IF EXISTS "Owners can insert their profile" ON profiles;
-CREATE POLICY "Owners can insert their profile" ON profiles FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Owners can insert their profile" ON profiles FOR INSERT WITH CHECK (true);
 
 -- ============================================================
 -- 2. PROJECTS

@@ -195,6 +195,21 @@ export const CertificateViewerModal: React.FC<CertificateViewerModalProps> = ({ 
               </a>
             )}
 
+            {/* Quick Open PDF in browser tab button */}
+            {isPdf && fileUrl && (
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ padding: '6px 14px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                title="Open PDF in a new browser tab for full native viewing"
+              >
+                <ExternalLink size={14} />
+                <span>Open PDF in Browser ↗</span>
+              </a>
+            )}
+
             {isImage && (
               <>
                 <button className="nav-btn" onClick={handleZoomOut} title="Zoom Out" style={{ padding: '8px' }}>
@@ -268,16 +283,51 @@ export const CertificateViewerModal: React.FC<CertificateViewerModalProps> = ({ 
           }}>
             {isPdf ? (
               <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <div style={{
+                  padding: '10px 16px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  borderBottom: '1px solid rgba(239, 68, 68, 0.25)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={18} style={{ color: '#ef4444' }} />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fca5a5' }}>
+                      PDF Certificate Document
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-primary"
+                      style={{ padding: '5px 12px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <ExternalLink size={13} />
+                      <span>Open PDF in Browser ↗</span>
+                    </a>
+                    <a
+                      href={fileUrl}
+                      download={cert.title_en}
+                      className="btn btn-secondary"
+                      style={{ padding: '5px 12px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Download size={13} />
+                      <span>Download</span>
+                    </a>
+                  </div>
+                </div>
                 <iframe 
                   src={`${fileUrl}#view=FitH`} 
                   title={cert.title_en} 
                   width="100%" 
                   height="100%" 
-                  style={{ border: 'none', borderRadius: '8px', flex: 1 }} 
+                  style={{ border: 'none', flex: 1, background: '#fff' }} 
                 />
-                <div style={{ padding: '8px 16px', textAlign: 'center', fontSize: '0.78rem', color: 'hsl(var(--text-muted))', borderTop: '1px solid var(--border-glass)', background: 'rgba(0,0,0,0.2)' }}>
-                  PDF Document &bull; <a href={fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'hsl(var(--accent-primary))', fontWeight: 600 }}>Open Full PDF in New Tab ↗</a> &bull; <a href={fileUrl} download={cert.title_en} style={{ color: 'hsl(var(--accent-primary))', fontWeight: 600 }}>Download PDF ⬇</a>
-                </div>
               </div>
             ) : fileUrl ? (
               <img 
@@ -326,40 +376,74 @@ export const CertificateViewerModal: React.FC<CertificateViewerModalProps> = ({ 
           </div>
         </div>
 
+        {/* Interactive Thumbnail Slide Carousel Strip */}
+        {achievements.length > 1 && (
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            overflowX: 'auto',
+            padding: '8px 2px 2px 2px',
+            marginTop: '10px',
+            borderTop: '1px solid var(--border-glass)',
+            scrollbarWidth: 'thin'
+          }}>
+            {achievements.map((item, idx) => {
+              const itemIsPdf = (item.file_url || '').toLowerCase().includes('.pdf');
+              const isActive = idx === currentIndex;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setZoom(1);
+                    setCurrentIndex(idx);
+                  }}
+                  style={{
+                    background: isActive ? 'var(--accent-glow)' : 'rgba(255,255,255,0.03)',
+                    border: isActive ? '2px solid hsl(var(--accent-primary))' : '1px solid var(--border-glass)',
+                    borderRadius: '8px',
+                    padding: '4px 8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    minWidth: '130px',
+                    maxWidth: '180px',
+                    textAlign: 'left',
+                    color: isActive ? 'hsl(var(--accent-primary))' : 'hsl(var(--text-secondary))',
+                    transition: 'all 0.15s ease',
+                    flexShrink: 0
+                  }}
+                  title={item.title_en}
+                >
+                  {itemIsPdf ? (
+                    <FileText size={14} style={{ color: '#ef4444', flexShrink: 0 }} />
+                  ) : item.file_url ? (
+                    <img src={item.file_url} alt="" style={{ width: '18px', height: '18px', objectFit: 'cover', borderRadius: '3px', flexShrink: 0 }} />
+                  ) : (
+                    <Shield size={14} style={{ color: '#34d399', flexShrink: 0 }} />
+                  )}
+                  <span style={{ fontSize: '0.72rem', fontWeight: isActive ? 700 : 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {item.title_en}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Navigation indicator footer */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginTop: '15px',
+          marginTop: '8px',
           fontSize: '0.8rem',
           color: 'hsl(var(--text-muted))'
         }}>
-          <span>{currentIndex + 1} of {achievements.length}</span>
+          <span>Slide {currentIndex + 1} of {achievements.length}</span>
           
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            {achievements.map((_, idx) => (
-              <span 
-                key={idx} 
-                style={{
-                  width: idx === currentIndex ? '18px' : '6px',
-                  height: '6px',
-                  borderRadius: '3px',
-                  backgroundColor: idx === currentIndex ? 'hsl(var(--accent-primary))' : 'var(--border-glass)',
-                  display: 'inline-block',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onClick={() => {
-                  setZoom(1);
-                  setCurrentIndex(idx);
-                }}
-              />
-            ))}
-          </div>
-
           <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-            Tip: Use ◄ ► arrows to navigate &bull; Esc to close
+            Tip: Use ◄ ► arrows to slide &bull; Esc to close
           </span>
         </div>
       </div>
