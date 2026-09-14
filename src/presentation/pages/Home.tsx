@@ -419,39 +419,61 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-            {filteredAchievements.map(cert => (
-              <div key={cert.id} className="glass-card" style={{ margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <span style={{ fontSize: '0.7rem', background: 'var(--border-glass)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', color: 'hsl(var(--accent-primary))', fontWeight: 700 }}>
-                    {cert.category}
-                  </span>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginTop: '8px', marginBottom: '4px' }}>{cert.title_en}</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-muted))' }}>{cert.issuer} &bull; {cert.date_earned}</p>
+            {filteredAchievements.map(cert => {
+              const isPdf = (cert.file_url || '').toLowerCase().includes('.pdf');
+              return (
+                <div key={cert.id} className="glass-card" style={{ margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '14px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.7rem', background: 'var(--border-glass)', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', color: 'hsl(var(--accent-primary))', fontWeight: 700 }}>
+                        {cert.category}
+                      </span>
+                      {isPdf && (
+                        <span style={{ fontSize: '0.68rem', background: 'rgba(239,68,68,0.15)', color: '#f87171', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          PDF
+                        </span>
+                      )}
+                      {cert.credential_url && !isPdf && (
+                        <span style={{ fontSize: '0.68rem', background: 'rgba(16,185,129,0.15)', color: '#34d399', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          Verified
+                        </span>
+                      )}
+                    </div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '4px', lineHeight: 1.3 }}>{cert.title_en}</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-muted))' }}>{cert.issuer} &bull; {cert.date_earned}</p>
+                    {cert.credential_id && (
+                      <p style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', marginTop: '4px' }}>
+                        ID: <code style={{ background: 'rgba(255,255,255,0.06)', padding: '1px 4px', borderRadius: '3px' }}>{cert.credential_id}</code>
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '8px', borderTop: '1px solid var(--border-glass)' }}>
+                    <button
+                      onClick={() => {
+                        window.history.pushState(null, '', `/certificate/${cert.slug || cert.id}`);
+                        window.dispatchEvent(new Event('popstate'));
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <span>View Credential</span>
+                      <span>↗</span>
+                    </button>
+                    {cert.credential_url && (
+                      <a
+                        href={cert.credential_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600, padding: '6px 8px', textDecoration: 'none' }}
+                      >
+                        Verify Link ↗
+                      </a>
+                    )}
+                  </div>
                 </div>
-                
-                <button
-                  onClick={() => {
-                    // Route sync and trigger popstate
-                    window.history.pushState(null, '', `/certificate/${cert.slug || cert.id}`);
-                    window.dispatchEvent(new Event('popstate'));
-                  }}
-                  style={{ 
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    fontSize: '0.8rem', 
-                    color: 'hsl(var(--accent-primary))', 
-                    fontWeight: 700, 
-                    marginTop: '12px', 
-                    display: 'block',
-                    textAlign: 'left'
-                  }}
-                >
-                  View Certificate Modal &rarr;
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

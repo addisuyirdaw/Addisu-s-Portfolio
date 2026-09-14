@@ -65,6 +65,8 @@ export interface Achievement {
   issuer: string;
   date_earned: string;
   credential_url?: string;
+  credential_id?: string;
+  description_en?: string;
   file_url?: string;
   badge_url?: string;
   category: string; // Certificate, Award, Badge, Publication, Fellowships, etc.
