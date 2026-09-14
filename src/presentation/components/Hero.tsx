@@ -6,6 +6,7 @@ interface HeroProps {
   onExploreProjects: () => void;
   onContactClick: () => void;
   onOpenResumeBuilder: () => void;
+  avatarUrl?: string;
   stats: {
     projects: number;
     certificates: number;
@@ -18,6 +19,7 @@ export const Hero: React.FC<HeroProps> = ({
   onExploreProjects,
   onContactClick,
   onOpenResumeBuilder,
+  avatarUrl,
   stats
 }) => {
   const { t } = useLanguage();
@@ -169,24 +171,42 @@ export const Hero: React.FC<HeroProps> = ({
                   borderRadius: '50%',
                   padding: '3px',
                   background: 'var(--accent-gradient)',
-                  boxShadow: '0 0 30px var(--accent-glow)'
+                  boxShadow: '0 0 30px var(--accent-glow)',
+                  overflow: 'hidden'
                 }}>
-                  <img
-                    src="/profile-avatar.png"
-                    alt="Addisu Yirdaw Deresse"
-                    style={{
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Addisu Yirdaw Deresse"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                      onError={(e) => {
+                        const el = e.currentTarget.parentElement!;
+                        el.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:2.5rem;font-weight:800;color:hsl(var(--accent-primary))">AY</div>';
+                      }}
+                    />
+                  ) : (
+                    <div style={{
                       width: '100%',
                       height: '100%',
                       borderRadius: '50%',
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                    onError={(e) => {
-                      // Fallback to initials if image fails
-                      const el = e.currentTarget.parentElement!;
-                      el.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:2.5rem;font-weight:800;color:#fff">AY</div>';
-                    }}
-                  />
+                      background: 'hsl(var(--bg-card))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '2.5rem',
+                      fontWeight: 800,
+                      color: 'hsl(var(--accent-primary))',
+                      letterSpacing: '1px'
+                    }}>
+                      AY
+                    </div>
+                  )}
                 </div>
                 {/* Online Status Dot */}
                 <span style={{

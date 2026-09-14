@@ -11,7 +11,7 @@ import {
   profileRepository
 } from '../../infrastructure/gateways';
 import { EmailService } from '../../domain/services/EmailService';
-import type { Project, Skill, TimelineEvent, Achievement, Testimonial, Blog } from '../../domain/entities';
+import type { Project, Skill, TimelineEvent, Achievement, Testimonial, Blog, Profile } from '../../domain/entities';
 import { InputSanitizer } from '../../domain/services';
 import { Hero } from '../components/Hero';
 import { TimelineView } from '../components/TimelineView';
@@ -32,6 +32,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   // Search State
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
@@ -51,13 +52,14 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [projs, sks, times, certs, tests, posts] = await Promise.all([
+        const [projs, sks, times, certs, tests, posts, prof] = await Promise.all([
           projectRepository.getAll(false),
           skillRepository.getAll(),
           timelineRepository.getAll(),
           achievementRepository.getAll(),
           testimonialRepository.getAll(false),
-          blogRepository.getAll(false)
+          blogRepository.getAll(false),
+          profileRepository.get().catch(() => null)
         ]);
 
         setProjects(projs);
@@ -66,6 +68,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
         setAchievements(certs);
         setTestimonials(tests);
         setBlogs(posts);
+        setProfile(prof);
 
         setStats({
           projects: projs.length,
@@ -210,6 +213,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
           document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
         }}
         onOpenResumeBuilder={onOpenResumeBuilder}
+        avatarUrl={profile?.avatar_url}
         stats={stats}
       />
 

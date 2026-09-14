@@ -106,11 +106,13 @@ export const Admin: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  // Inline file-upload states (so cert/project forms can upload directly without leaving the form)
+  // Inline file-upload states (so cert/project/avatar forms can upload directly without leaving the form)
   const [certFileUploading, setCertFileUploading] = useState(false);
   const [projectCoverUploading, setProjectCoverUploading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const certFileInputRef = useRef<HTMLInputElement>(null);
   const projectCoverInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Form Fields States
   const [projectForm, setProjectForm] = useState({
@@ -538,6 +540,27 @@ export const Admin: React.FC = () => {
     } finally {
       setProjectCoverUploading(false);
       if (projectCoverInputRef.current) projectCoverInputRef.current.value = '';
+    }
+  };
+
+  // Upload a profile avatar directly from device and fill avatar_url
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      if (!isSupabaseMode) {
+        alert('⚠️ Supabase must be configured to upload persistent photos.');
+        return;
+      }
+      const result = await mediaStorage.uploadFile(file, 'Profile');
+      const publicUrl = mediaStorage.getPublicUrl(result.file_path);
+      setProfileForm(prev => ({ ...prev, avatar_url: publicUrl }));
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message || 'Unknown storage error'}`);
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
     }
   };
 
@@ -1651,6 +1674,107 @@ export const Admin: React.FC = () => {
             <form className="glass-panel" onSubmit={handleSaveProfile} style={{ padding: '30px', borderRadius: '24px' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '20px' }}>Career Management Profile Settings</h2>
               
+              {/* Profile Avatar Upload Section */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '20px',
+                padding: '16px 20px',
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: '16px',
+                border: '1px solid var(--border-glass)',
+                marginBottom: '24px',
+                flexWrap: 'wrap'
+              }}>
+                <div style={{
+                  width: '90px',
+                  height: '90px',
+                  borderRadius: '50%',
+                  padding: '3px',
+                  background: 'var(--accent-gradient)',
+                  boxShadow: '0 0 20px var(--accent-glow)',
+                  flexShrink: 0,
+                  overflow: 'hidden'
+                }}>
+                  {profileForm.avatar_url ? (
+                    <img
+                      src={profileForm.avatar_url}
+                      alt="Profile Avatar"
+                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        const el = e.currentTarget.parentElement!;
+                        el.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;color:hsl(var(--accent-primary))">AY</div>';
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      background: 'hsl(var(--bg-card))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.8rem',
+                      fontWeight: 800,
+                      color: 'hsl(var(--accent-primary))'
+                    }}>
+                      AY
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ flex: 1, minWidth: '220px' }}>
+                  <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>Real Profile Photo</h4>
+                  <p style={{ fontSize: '0.8rem', color: 'hsl(var(--text-muted))', marginBottom: '10px' }}>
+                    Upload your actual photo from your device. It replaces the default placeholder on the homepage hero.
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <label
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 16px',
+                        background: avatarUploading ? 'rgba(99,102,241,0.3)' : 'var(--accent-gradient, hsl(250,80%,55%))',
+                        color: '#fff',
+                        borderRadius: '8px',
+                        cursor: avatarUploading ? 'not-allowed' : 'pointer',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        opacity: avatarUploading ? 0.7 : 1
+                      }}
+                    >
+                      <Upload size={14} />
+                      {avatarUploading ? 'Uploading photo…' : 'Upload Photo from Device'}
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        disabled={avatarUploading}
+                        onChange={handleAvatarUpload}
+                      />
+                    </label>
+                    {profileForm.avatar_url && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ padding: '7px 12px', fontSize: '0.8rem' }}
+                        onClick={() => setProfileForm(prev => ({ ...prev, avatar_url: '' }))}
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
+                  {profileForm.avatar_url && (
+                    <p style={{ fontSize: '0.75rem', color: '#22c55e', marginTop: '6px' }}>
+                      ✅ Photo ready! Click &quot;Save Profile System Settings&quot; below to apply.
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Full Name</label>
                 <input type="text" className="form-input" value={profileForm.full_name} onChange={e => setProfileForm({...profileForm, full_name: e.target.value})} required />
