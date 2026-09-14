@@ -556,6 +556,15 @@ export const Admin: React.FC = () => {
       const result = await mediaStorage.uploadFile(file, 'Profile');
       const publicUrl = mediaStorage.getPublicUrl(result.file_path);
       setProfileForm(prev => ({ ...prev, avatar_url: publicUrl }));
+      localStorage.setItem('portfolio_avatar_url', publicUrl);
+
+      // Auto-save to repository immediately so it never disappears on refresh
+      try {
+        await profileRepository.update({ ...profileForm, avatar_url: publicUrl });
+        refreshData();
+      } catch (saveErr) {
+        console.warn('Auto-save profile warning:', saveErr);
+      }
     } catch (err: any) {
       alert(`Upload failed: ${err.message || 'Unknown storage error'}`);
     } finally {

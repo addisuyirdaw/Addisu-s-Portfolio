@@ -213,7 +213,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectProject, onOpenResumeBuilder
           document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
         }}
         onOpenResumeBuilder={onOpenResumeBuilder}
-        avatarUrl={profile?.avatar_url}
+        avatarUrl={profile?.avatar_url || localStorage.getItem('portfolio_avatar_url') || undefined}
         stats={stats}
       />
 

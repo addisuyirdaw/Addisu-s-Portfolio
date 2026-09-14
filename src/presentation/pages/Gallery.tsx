@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { mediaStorage, isSupabaseMode } from '../../infrastructure/gateways';
 import { supabase } from '../../infrastructure/config/supabaseClient';
 import type { MediaFile } from '../../domain/entities';
-import { Search, Image as ImageIcon, Video, Folder, Calendar, X, ChevronLeft, ChevronRight, Download, Share2, Check } from 'lucide-react';
+import { Search, Image as ImageIcon, Video, Folder, Calendar, X, ChevronLeft, ChevronRight, Download, Share2, Check, FileText, ExternalLink } from 'lucide-react';
 
 export const Gallery: React.FC = () => {
   const [mediaList, setMediaList] = useState<MediaFile[]>([]);
@@ -57,8 +57,16 @@ export const Gallery: React.FC = () => {
 
   // Filter logic
   const filteredMedia = mediaList.filter(item => {
+    const isItemPdf = item.file_type === 'pdf' || item.name.toLowerCase().endsWith('.pdf');
+    const isItemVideo = item.file_type === 'video' || item.name.toLowerCase().endsWith('.mp4') || item.name.toLowerCase().endsWith('.webm');
+    const isItemImage = !isItemPdf && !isItemVideo;
+
+    let matchesType = true;
+    if (selectedType === 'image') matchesType = isItemImage;
+    else if (selectedType === 'video') matchesType = isItemVideo;
+    else if (selectedType === 'pdf') matchesType = isItemPdf;
+
     const matchesAlbum = selectedAlbum === 'All' || item.folder_name.toLowerCase() === selectedAlbum.toLowerCase();
-    const matchesType = selectedType === 'All' || item.file_type === selectedType;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesAlbum && matchesType && matchesSearch;
   });
@@ -150,6 +158,13 @@ export const Gallery: React.FC = () => {
             >
               <Video size={14} /> Videos
             </button>
+            <button 
+              className={`filter-chip ${selectedType === 'pdf' ? 'active' : ''}`}
+              onClick={() => { setSelectedType('pdf'); setDisplayCount(12); }}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+            >
+              <FileText size={14} /> PDFs & Docs
+            </button>
           </div>
         </div>
 
@@ -225,19 +240,35 @@ export const Gallery: React.FC = () => {
                     justifyContent: 'center',
                     minHeight: '140px'
                   }}>
-                    {file.file_type === 'image' ? (
-                      <img 
-                        src={url} 
-                        alt={file.name} 
-                        style={{ width: '100%', display: 'block', objectFit: 'cover' }} 
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '30px' }}>
-                        <Video size={36} style={{ color: 'hsl(var(--accent-primary))' }} />
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Play Video Clip</span>
-                      </div>
-                    )}
+                    {(() => {
+                      const isPdf = file.file_type === 'pdf' || file.name.toLowerCase().endsWith('.pdf');
+                      const isVideo = file.file_type === 'video' || file.name.toLowerCase().endsWith('.mp4') || file.name.toLowerCase().endsWith('.webm');
+                      if (isPdf) {
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '30px', textAlign: 'center' }}>
+                            <FileText size={40} style={{ color: '#ef4444' }} />
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f87171' }}>PDF Document</span>
+                            <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))' }}>Click to view document ↗</span>
+                          </div>
+                        );
+                      }
+                      if (isVideo) {
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '30px' }}>
+                            <Video size={36} style={{ color: 'hsl(var(--accent-primary))' }} />
+                            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Play Video Clip</span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <img 
+                          src={url} 
+                          alt={file.name} 
+                          style={{ width: '100%', display: 'block', objectFit: 'cover' }} 
+                          loading="lazy"
+                        />
+                      );
+                    })()}
                   </div>
 
                   <div style={{ marginTop: '12px' }}>
@@ -362,27 +393,90 @@ export const Gallery: React.FC = () => {
                 justifyContent: 'center',
                 overflow: 'auto'
               }} onClick={e => e.stopPropagation()}>
-                {file.file_type === 'image' ? (
-                  <img 
-                    src={url} 
-                    alt={file.name} 
-                    style={{
-                      maxHeight: '80vh',
-                      maxWidth: '90vw',
-                      objectFit: 'contain',
-                      transform: `scale(${zoom})`,
-                      transition: 'transform 0.15s ease',
-                      borderRadius: '8px'
-                    }} 
-                  />
-                ) : (
-                  <video 
-                    src={url} 
-                    controls 
-                    autoPlay 
-                    style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: '8px' }} 
-                  />
-                )}
+                {(() => {
+                  const isPdf = file.file_type === 'pdf' || file.name.toLowerCase().endsWith('.pdf');
+                  const isVideo = file.file_type === 'video' || file.name.toLowerCase().endsWith('.mp4') || file.name.toLowerCase().endsWith('.webm');
+                  if (isPdf) {
+                    return (
+                      <div style={{
+                        width: 'min(90vw, 850px)',
+                        height: '75vh',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        background: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '16px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          padding: '14px 20px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          borderBottom: '1px solid rgba(255,255,255,0.1)',
+                          background: 'rgba(0,0,0,0.3)',
+                          flexWrap: 'wrap',
+                          gap: '10px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FileText size={22} style={{ color: '#ef4444' }} />
+                            <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>{file.name}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-primary"
+                              style={{ padding: '6px 14px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <ExternalLink size={14} />
+                              <span>Open PDF in Browser ↗</span>
+                            </a>
+                            <a
+                              href={url}
+                              download={file.name}
+                              className="btn btn-secondary"
+                              style={{ padding: '6px 14px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Download size={14} />
+                              <span>Download</span>
+                            </a>
+                          </div>
+                        </div>
+                        <iframe
+                          src={`${url}#toolbar=0`}
+                          title={file.name}
+                          style={{ width: '100%', flex: 1, border: 'none' }}
+                        />
+                      </div>
+                    );
+                  }
+                  if (isVideo) {
+                    return (
+                      <video 
+                        src={url} 
+                        controls 
+                        autoPlay 
+                        style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: '8px' }} 
+                      />
+                    );
+                  }
+                  return (
+                    <img 
+                      src={url} 
+                      alt={file.name} 
+                      style={{
+                        maxHeight: '80vh',
+                        maxWidth: '90vw',
+                        objectFit: 'contain',
+                        transform: `scale(${zoom})`,
+                        transition: 'transform 0.15s ease',
+                        borderRadius: '8px'
+                      }} 
+                    />
+                  );
+                })()}
               </div>
             </div>
 

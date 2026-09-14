@@ -541,27 +541,40 @@ export class SupabaseAIService implements AIService {
 export class SupabaseProfileRepository implements ProfileRepository {
   async get(): Promise<Profile | null> {
     if (!isSupabaseConfigured) return null;
-    const { data, error } = await supabase!.from('profiles').select('*').limit(1).maybeSingle();
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase!.from('profiles').select('*').limit(1).maybeSingle();
+      if (error) {
+        console.warn('Failed to load profile from Supabase:', error);
+        return null;
+      }
+      return data;
+    } catch (e) {
+      console.warn('Error fetching profile:', e);
+      return null;
+    }
   }
 
   async update(profile: Partial<Profile>): Promise<Profile> {
     if (!isSupabaseConfigured) throw new Error('Supabase not configured');
     
-    // Check if profile exists
-    const current = await this.get();
-    let query;
-    if (current) {
-      query = supabase!.from('profiles').update(profile).eq('id', current.id);
-    } else {
-      // Get current auth user ID if available
-      const { data: userData } = await supabase!.auth.getUser();
-      const userId = userData?.user?.id || '00000000-0000-0000-0000-000000000000';
-      query = supabase!.from('profiles').insert([{ ...profile, id: userId }]);
-    }
-    
-    const { data, error } = await query.select().single();
+    const { data: userData } = await supabase!.auth.getUser();
+    const current = await this.get().catch(() => null);
+    const userId = current?.id || userData?.user?.id || '00000000-0000-0000-0000-000000000000';
+
+    const payload = {
+      full_name: 'Addisu Yirdaw Deresse',
+      headline: 'Computer Science & Business Administration Double-Major | AI & Mobile App Developer',
+      email: 'yirdawaddisu14@gmail.com',
+      location: 'Ethiopia',
+      github_url: 'https://github.com/addisuyirdaw',
+      linkedin_url: 'https://linkedin.com/in/addisuyirdaw2025',
+      ...current,
+      ...profile,
+      id: userId,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase!.from('profiles').upsert(payload, { onConflict: 'id' }).select().single();
     if (error) throw error;
     return data;
   }
